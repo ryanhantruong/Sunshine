@@ -23,6 +23,9 @@
     <!--Used to display error-->
     <string name="error_msg">Error Loading Weather Data</string>
 
+    <string name="action_map">Open Map</string>
+    <string name="action_share">Share Weather</string>
+
 
     <!--Used by SunshineDateUtils-->
     <!-- For labelling today's forecast [CHAR LIMIT=15] -->

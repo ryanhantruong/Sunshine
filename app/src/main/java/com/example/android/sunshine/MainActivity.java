@@ -18,6 +18,8 @@ package com.example.android.sunshine;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -41,20 +43,38 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView mWeatherTextView;
 
     private TextView mErrorTextView;
 
     private ProgressBar mProgressBar;
+
+    private RecyclerView mRecyclerView;
+
+    private ForecastAdapter mForecastAdapter;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forecast);
 
-        mWeatherTextView = (TextView) findViewById(R.id.tv_weather_data);
-        mErrorTextView = (TextView) findViewById(R.id.tv_error);
-        mProgressBar = (ProgressBar) findViewById(R.id.pb_loading);
+        mErrorTextView = (TextView) findViewById(R.id.tv_error_message_display);
+        mProgressBar = (ProgressBar) findViewById(R.id.pb_loading_indicator);
+
+
+        mRecyclerView = (RecyclerView) findViewById(R.id.rv_forecast);
+
+        boolean shouldReverseLayout = false;
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,shouldReverseLayout);
+
+        mRecyclerView.setLayoutManager(layoutManager);
+
+        mRecyclerView.setHasFixedSize(true);
+
+        mForecastAdapter = new ForecastAdapter();
+
+        mRecyclerView.setAdapter(mForecastAdapter);
 
         loadWeatherData();
     }
@@ -79,21 +99,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(String response){
                 String[] weatherData = null;
-
+                // hide loading bar
+                mProgressBar.setVisibility(View.INVISIBLE);
                 try {
                     weatherData = OpenWeatherJsonUtils
                             .getSimpleWeatherStringsFromJson(MainActivity.this, response);
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    mWeatherTextView.setText(R.string.error_msg);
+                    showErrorMessage();
                 }
-
-                // hide loading bar
-                mProgressBar.setVisibility(View.INVISIBLE);
                 // display info
-                for (String weatherString : weatherData) {
-                    mWeatherTextView.append((weatherString) + "\n\n\n");
-                }
+                mForecastAdapter.setWeatherData(weatherData);
 
             }
         };
@@ -114,12 +130,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showWeatherDataView(){
-        mWeatherTextView.setVisibility(View.VISIBLE);
+        mRecyclerView.setVisibility(View.VISIBLE);
         mErrorTextView.setVisibility(View.INVISIBLE);
     }
 
     private void showErrorMessage(){
-        mWeatherTextView.setVisibility(View.INVISIBLE);
+        mRecyclerView.setVisibility(View.INVISIBLE);
         mErrorTextView.setVisibility(View.VISIBLE);
     }
 
@@ -139,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_refresh) {
-            mWeatherTextView.setText("");
+            mForecastAdapter.setWeatherData(null);
             // display loading bar
             mProgressBar.setVisibility(View.VISIBLE);
             loadWeatherData();
